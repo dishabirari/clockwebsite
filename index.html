@@ -3,12 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Clock Creations - Your Imagination, On Time</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Custom Clock Creations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
-<body>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
+        :root {
+            --primary-green: #34D399;
+            --primary-dark-green: #10B981;
+            --secondary-blue: #3B82F6;
+            --text-dark: #2A364F;
+            --text-light: #5C6B80;
+            --bg-light: #F9FAFB;
+            --bg-medium: #F3F4F6;
+            --border-color: #E5E7EB;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 15px 50px;
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: background-color 0.3s ease;
+        }
+
+        .logo-container {
+            margin-right: auto;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-green);
+            text-decoration: none;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .logo:hover {
+            color: var(--primary-dark-green);
+            transform: scale(1.03);
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            margin: 0;
+            padding: 0;
+            margin-left: auto;
+        }
+
+        .nav-links li {
+            margin-left: 25px;
+        }
+
+        .nav-links li:last-child {
+            margin-right: 1in;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 600;
+            transition: color 0.3s ease, transform 0.2s ease, text-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0%;
+            height: 3px;
+            bottom: -5px;
+            left: 0;
+            background-color: var(--primary-green);
+            transition: width 0.3s ease-out;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-dark-green);
+            transform: translateY(-3px);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+            background: linear-gradient(rgba(249, 250, 251, 0.95), rgba(249, 250, 251, 0.8)), url('https://placehold.co/1920x1080/E5E7EB/4B5563?text=Custom+Clock+Background') no-repeat center center;
+            background-size: cover;
+        }
+        
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+            color: var(--primary-dark-green);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            font-weight: 400;
+            color: var(--text-light);
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: var(--secondary-blue);
+            color: var(--white);
+            padding: 15px 30px;
+            border-radius: 9999px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .cta-button:hover {
+            background-color: #2563EB;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        footer {
+            background-color: var(--text-dark);
+            color: var(--bg-light);
+            padding: 60px 50px;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            border-top: 8px solid var(--primary-green);
+        }
+        .footer-content {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .footer-content > div {
+            flex: 1;
+            min-width: 250px;
+            margin: 20px;
+        }
+        footer h3 {
+            border-bottom: 3px solid var(--primary-green);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            font-size: 1.4rem;
+            color: var(--white);
+        }
+        .contact-info p {
+            margin: 8px 0;
+            font-size: 0.95rem;
+        }
+        .social-links {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .social-icon {
+            color: var(--bg-light);
+            font-size: 1.8rem;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        .social-icon:hover {
+            color: var(--primary-green);
+            transform: translateY(-5px) scale(1.1);
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+                flex-wrap: wrap;
+            }
+            .logo {
+                font-size: 1.5rem;
+            }
+            .nav-links {
+                display: flex;
+                justify-content: space-around;
+                width: 100%;
+                margin-top: 15px;
+                margin-left: 0;
+            }
+            .nav-links li {
+                margin-left: 0;
+                font-size: 0.9rem;
+            }
+            .nav-links li:last-child {
+                margin-right: 0;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            .hero p {
+                font-size: 1.1rem;
+            }
+            .cta-button {
+                padding: 12px 25px;
+                font-size: 1rem;
+            }
+            footer {
+                padding: 40px 20px;
+                flex-direction: column;
+                align-items: center;
+            }
+            .footer-content > div {
+                margin: 15px 0;
+                text-align: center;
+            }
+            .social-links {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    
     <header>
         <nav class="navbar">
             <div class="logo-container">
@@ -25,48 +266,13 @@
         </nav>
     </header>
 
-    <main class="hero">
-        <div class="hero-content">
-            <h1 class="animate__animated animate__fadeInDown">Your Imagination, On Time</h1>
-            <p class="animate__animated animate__fadeInUp">Create a personalized wall clock with your favorite photos.</p>
-            <a href="customize.html" class="cta-button animate__animated animate__zoomIn">Start Customizing</a>
-        </div>
+    <main>
+        <section class="hero">
+            <h1>Create a Clock, Your Way</h1>
+            <p>Customize your own unique clock with your favorite images and personal style. It's time to get creative!</p>
+            <a href="customize.html" class="cta-button">Start Customization</a>
+        </section>
     </main>
-
-    <section class="about-process">
-        <div class="container">
-            <h2>Craft Your Perfect Timepiece</h2>
-            <div class="process-steps">
-                <div class="step">
-                    <i class="fas fa-camera-retro"></i>
-                    <h3>1. Upload Your Photos</h3>
-                    <p>Simply choose your favorite memories from your gallery. Our easy-to-use tool lets you pick up to 4 photos to feature on your clock.</p>
-                </div>
-                <div class="step">
-                    <i class="fas fa-paint-brush"></i>
-                    <h3>2. Customize Your Design</h3>
-                    <p>Arrange your photos exactly as you want them on the clock face. See a live preview of your custom creation before you finalize.</p>
-                </div>
-                <div class="step">
-                    <i class="fas fa-truck-fast"></i>
-                    <h3>3. Get It Delivered</h3>
-                    <p>We'll handle the rest! Our team will craft your unique clock with high-quality materials and ship it directly to your doorstep.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div id="feedback-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h3>We're sorry to hear that!</h3>
-            <p>Please tell us how we can improve. Your feedback is important to us.</p>
-            <form id="feedback-form">
-                <textarea id="feedback-text" placeholder="Enter your feedback here..." rows="5" required></textarea>
-                <button type="submit" class="submit-btn">Submit Feedback</button>
-            </form>
-        </div>
-    </div>
 
     <footer>
         <div class="footer-content">
@@ -82,17 +288,8 @@
                 <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
                 <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
             </div>
-            <div class="feedback">
-                <h3>Your Experience</h3>
-                <p>How was your experience?</p>
-                <div class="feedback-buttons">
-                    <button class="feedback-btn" id="thumbsUp"><i class="fas fa-thumbs-up"></i></button>
-                    <button class="feedback-btn" id="thumbsDown"><i class="fas fa-thumbs-down"></i></button>
-                </div>
-            </div>
         </div>
     </footer>
-
-    <script src="script.js"></script>
+    
 </body>
 </html>
