@@ -1,0 +1,527 @@
+/* Color Palette Variables */
+:root {
+    --primary-green: #34D399; /* A vibrant, fresh green */
+    --primary-dark-green: #10B981; /* Darker shade for hover/active */
+    --secondary-blue: #3B82F6; /* A clean, modern blue */
+    --text-dark: #2A364F; /* Dark blue/grey for headings */
+    --text-light: #5C6B80; /* Lighter grey for body text */
+    --bg-light: #F9FAFB; /* Very light background */
+    --bg-medium: #F3F4F6; /* Slightly darker background */
+    --border-color: #E5E7EB; /* Light border color */
+    --white: #FFFFFF;
+}
+
+/* General Body and Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    overflow-x: hidden; /* Prevent horizontal scroll from animations */
+}
+
+/* Header and Navigation Bar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 50px; /* Slightly reduced padding */
+    background-color: rgba(255, 255, 255, 0.95); /* More opaque */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Softer shadow */
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    transition: background-color 0.3s ease;
+}
+
+.logo {
+    font-size: 1.8rem; /* Slightly larger */
+    font-weight: 700;
+    color: var(--primary-green);
+    text-decoration: none;
+    transition: color 0.3s ease, transform 0.3s ease;
+    animation: bounceIn 1s ease-out forwards; /* Initial logo animation */
+    animation-delay: 0.2s;
+    opacity: 0; /* Start hidden for animation */
+}
+.logo:hover {
+    color: var(--primary-dark-green);
+    transform: scale(1.03);
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li {
+    margin-left: 25px; /* More spacing */
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-dark); /* Darker text for better contrast */
+    font-weight: 600; /* Bolder links */
+    transition: color 0.3s ease, transform 0.2s ease, text-shadow 0.3s ease;
+    position: relative;
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    width: 0%;
+    height: 3px;
+    bottom: -5px;
+    left: 0;
+    background-color: var(--primary-green);
+    transition: width 0.3s ease-out;
+}
+
+.nav-links a:hover {
+    color: var(--primary-dark-green);
+    transform: translateY(-3px);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.nav-links a:hover::after {
+    width: 100%;
+}
+
+
+/* Hero Section (Main Content) */
+.hero {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-blue) 100%); /* Vibrant gradient */
+    position: relative;
+    overflow: hidden;
+    animation: heroGradientShift 20s ease infinite alternate; /* Slower, alternating shift */
+}
+
+@keyframes heroGradientShift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+/* Subtle background overlay animation */
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at top left, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at bottom right, rgba(255,255,255,0.1) 0%, transparent 50%);
+    animation: heroOverlayPulse 10s ease-in-out infinite alternate;
+}
+
+@keyframes heroOverlayPulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+
+.hero-content {
+    z-index: 10;
+    position: relative;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.1); /* Slight translucent background for text */
+    border-radius: 15px;
+    backdrop-filter: blur(5px); /* Frosted glass effect */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    animation: fadeInScale 1.5s ease-out forwards;
+    opacity: 0;
+}
+
+.hero h1 {
+    font-size: 4rem; /* Larger and more impactful */
+    margin-bottom: 15px;
+    color: var(--white); /* White text for contrast */
+    font-weight: 700;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    animation: slideInFromTop 1s ease-out forwards;
+    animation-delay: 0.5s;
+    opacity: 0;
+}
+
+.hero p {
+    font-size: 1.5rem; /* Larger text */
+    color: var(--white);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    animation: slideInFromBottom 1s ease-out forwards;
+    animation-delay: 0.8s;
+    opacity: 0;
+}
+
+.cta-button {
+    display: inline-block;
+    padding: 18px 40px; /* Larger button */
+    background-color: var(--primary-green);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 50px;
+    font-size: 1.25rem; /* Larger font */
+    font-weight: 600;
+    margin-top: 40px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2); /* Stronger shadow */
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    animation: popIn 1s ease-out forwards;
+    animation-delay: 1.2s;
+    opacity: 0;
+}
+
+.cta-button:hover {
+    background-color: var(--primary-dark-green);
+    transform: scale(1.1); /* More pronounced hover effect */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* About Process Section */
+.about-process {
+    padding: 100px 50px; /* More vertical padding */
+    text-align: center;
+    background-color: var(--bg-medium); /* Slightly darker background */
+    position: relative;
+    overflow: hidden;
+}
+
+.about-process h2 {
+    font-size: 3rem; /* Larger heading */
+    color: var(--text-dark);
+    margin-bottom: 60px;
+    position: relative;
+    display: inline-block;
+    animation: fadeIn 1s ease-out forwards;
+    opacity: 0;
+    animation-timeline: view(); /* Animates when in view */
+    animation-range: entry 25% cover 50%;
+}
+.about-process h2::after {
+    content: '';
+    position: absolute;
+    width: 80%;
+    height: 4px;
+    background-color: var(--primary-green);
+    bottom: -15px;
+    left: 10%;
+    border-radius: 2px;
+}
+
+.process-steps {
+    display: flex;
+    justify-content: center; /* Center items when few */
+    flex-wrap: wrap;
+    gap: 30px; /* Reduced gap slightly for more compact look */
+}
+
+.step {
+    flex-basis: 300px;
+    max-width: 350px; /* Max width for consistency */
+    padding: 35px; /* More padding */
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); /* Enhanced shadow */
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease; /* Smoother transition */
+    animation: fadeInSlideUp 1s ease-out forwards;
+    opacity: 0;
+    /* Staggered animation based on custom properties (JavaScript will set these) */
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+}
+/* Delay steps for staggered effect - Can also be done with JS */
+.step:nth-child(1) { animation-delay: 0.2s; }
+.step:nth-child(2) { animation-delay: 0.4s; }
+.step:nth-child(3) { animation-delay: 0.6s; }
+
+
+.step:hover {
+    transform: translateY(-15px) rotate(1deg); /* Slight rotation on hover */
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.step i {
+    font-size: 4rem; /* Larger icons */
+    color: var(--primary-green);
+    margin-bottom: 25px;
+    transition: transform 0.3s ease;
+}
+.step:hover i {
+    transform: scale(1.1); /* Icon slightly grows on hover */
+}
+
+.step h3 {
+    font-size: 1.6rem; /* Larger heading */
+    color: var(--text-dark);
+    margin-bottom: 15px;
+}
+
+.step p {
+    color: var(--text-light);
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+
+/* Footer */
+footer {
+    background-color: var(--text-dark); /* Darker footer */
+    color: var(--bg-light);
+    padding: 60px 50px; /* More padding */
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    border-top: 8px solid var(--primary-green); /* Thicker, vibrant border */
+    position: relative;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 1200px; /* Max width for content */
+    margin: 0 auto;
+}
+
+.footer-content > div {
+    flex: 1;
+    min-width: 250px; /* Increased min-width */
+    margin: 20px;
+}
+
+footer h3 {
+    border-bottom: 3px solid var(--primary-green); /* Thicker border */
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+    font-size: 1.4rem; /* Larger heading */
+    color: var(--white); /* White headings */
+}
+
+.contact-info p {
+    margin: 8px 0; /* More spacing */
+    font-size: 0.95rem;
+}
+
+.social-links {
+    display: flex;
+    gap: 20px; /* More spacing */
+    margin-top: 15px;
+}
+
+.social-icon {
+    color: var(--bg-light);
+    font-size: 1.8rem; /* Larger icons */
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.social-icon:hover {
+    color: var(--primary-green);
+    transform: translateY(-5px) scale(1.1); /* More pronounced hover */
+}
+
+/* Feedback Section */
+.feedback-buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.feedback-btn {
+    background: none;
+    border: 2px solid var(--bg-light);
+    color: var(--bg-light);
+    padding: 12px 20px; /* Larger buttons */
+    border-radius: 8px; /* Slightly rounded */
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+}
+
+.feedback-btn:hover {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+    color: var(--white);
+    transform: translateY(-3px);
+}
+
+/* Modal (Popup) Styles - Adjusted for new palette */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Darker overlay */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--white);
+    padding: 40px; /* More padding */
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    position: relative;
+    max-width: 550px;
+    width: 90%;
+    text-align: center;
+    animation: fadeInScale 0.4s ease-out; /* Uses the new keyframe */
+}
+
+.close-btn {
+    color: var(--text-light);
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 32px; /* Larger close button */
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: var(--text-dark);
+}
+
+#feedback-form textarea {
+    width: calc(100% - 20px);
+    margin-bottom: 25px;
+    padding: 15px; /* More padding */
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    resize: vertical;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+#feedback-form textarea:focus {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+    outline: none;
+}
+
+.submit-btn {
+    background-color: var(--primary-green);
+    color: var(--white);
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.submit-btn:hover {
+    background-color: var(--primary-dark-green);
+    transform: translateY(-2px);
+}
+
+/* New Keyframe Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInFromTop {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInFromBottom {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.7); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); opacity: 1; }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeInSlideUp {
+    from { opacity: 0; transform: translateY(50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 15px 20px;
+    }
+    .logo {
+        font-size: 1.5rem;
+    }
+    .nav-links {
+        display: none; /* Can implement a hamburger menu here */
+    }
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+    .hero p {
+        font-size: 1.1rem;
+    }
+    .cta-button {
+        padding: 12px 25px;
+        font-size: 1rem;
+    }
+    .about-process {
+        padding: 60px 20px;
+    }
+    .about-process h2 {
+        font-size: 2rem;
+    }
+    .process-steps {
+        flex-direction: column;
+        align-items: center;
+    }
+    .step {
+        flex-basis: 100%;
+        max-width: 90%;
+    }
+    footer {
+        padding: 40px 20px;
+        flex-direction: column;
+        align-items: center;
+    }
+    .footer-content > div {
+        margin: 15px 0;
+        text-align: center;
+    }
+    .social-links {
+        justify-content: center;
+    }
+    .feedback-buttons {
+        justify-content: center;
+    }
+    .modal-content {
+        padding: 30px 20px;
+    }
+}
