@@ -154,14 +154,17 @@
             cursor: pointer;
             transition: all 0.3s ease;
             overflow: hidden;
+            touch-action: none; /* Prevents touch scrolling while dragging */
         }
         .image-circle-area:hover {
-            transform: scale(1.05);
             border-color: var(--primary-green);
         }
         .image-circle-area.has-image {
             border: none;
-            cursor: default;
+            cursor: grab;
+        }
+        .image-circle-area.has-image.is-dragging {
+            cursor: grabbing;
         }
         .image-circle-area.has-image.active {
             border: 2px dashed var(--secondary-blue);
@@ -169,11 +172,13 @@
         }
         .image-circle-area img {
             position: absolute;
-            width: 100%;
-            height: 100%;
+            width: 150%;
+            height: 150%;
             object-fit: cover;
+            object-position: center center;
             z-index: 10;
-            cursor: move;
+            transition: transform 0.1s ease-out; /* Smooth transition for zoom */
+            transform: translate(0, 0);
         }
         .image-circle-area .placeholder-text {
             font-size: 1rem;
@@ -224,21 +229,6 @@
         .second-hand { width: 3px; height: 45%; top: 5%; left: calc(50% - 1.5px); background-color: var(--primary-green); border-radius: 5px; }
         .hand.hidden {
             display: none;
-        }
-        .manual-controls {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 50;
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 8px 12px;
-            border-radius: 9999px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .manual-controls.active {
-            display: flex;
         }
         
         /* Footer from homepage */
@@ -479,6 +469,16 @@
                 <input type="checkbox" id="showHands" checked class="form-checkbox h-5 w-5 text-green-600 rounded">
             </div>
             
+            <!-- Zoom Controls -->
+            <div id="zoomControls" class="mb-6 hidden">
+                <h3 class="text-lg font-medium mb-2">Zoom Image</h3>
+                <input type="range" id="zoomSlider" min="1.0" max="3.0" step="0.1" value="1.0" class="w-full">
+                <div class="flex justify-between text-sm text-gray-500 mt-1">
+                    <span>1.0x</span>
+                    <span>3.0x</span>
+                </div>
+            </div>
+
             <!-- Image Status Table -->
             <div class="mb-8">
                 <h3 class="text-xl font-semibold mb-4">Image Status</h3>
@@ -529,34 +529,18 @@
                     <div class="image-circle-area image-1" data-image-id="1">
                         <span class="placeholder-text">Add Image 1</span>
                         <input type="file" class="hidden" accept="image/*">
-                        <div class="manual-controls">
-                            <button class="zoom-in-btn bg-gray-200 p-2 rounded-full text-sm font-semibold hover:bg-gray-300"><i class="fas fa-search-plus"></i></button>
-                            <button class="zoom-out-btn bg-gray-200 p-2 rounded-full text-sm font-semibold hover:bg-gray-300"><i class="fas fa-search-minus"></i></button>
-                        </div>
                     </div>
                     <div class="image-circle-area image-2" data-image-id="2">
                         <span class="placeholder-text">Add Image 2</span>
                         <input type="file" class="hidden" accept="image/*">
-                        <div class="manual-controls">
-                            <button class="zoom-in-btn bg-gray-200 p-2 rounded-full text-sm font-semibold hover:bg-gray-300"><i class="fas fa-search-plus"></i></button>
-                            <button class="zoom-out-btn bg-gray-200 p-2 rounded-full text-sm font-semibold hover:bg-gray-300"><i class="fas fa-search-minus"></i></button>
-                        </div>
                     </div>
                     <div class="image-circle-area image-3" data-image-id="3">
                         <span class="placeholder-text">Add Image 3</span>
                         <input type="file" class="hidden" accept="image/*">
-                        <div class="manual-controls">
-                            <button class="zoom-in-btn bg-gray-200 p-2 rounded-full text-sm font-semibold hover:bg-gray-300"><i class="fas fa-search-plus"></i></button>
-                            <button class="zoom-out-btn bg-gray-200 p-2 rounded-full text-sm font-semibold hover:bg-gray-300"><i class="fas fa-search-minus"></i></button>
-                        </div>
                     </div>
                     <div class="image-circle-area image-4" data-image-id="4">
                         <span class="placeholder-text">Add Image 4</span>
                         <input type="file" class="hidden" accept="image/*">
-                        <div class="manual-controls">
-                            <button class="zoom-in-btn bg-gray-200 p-2 rounded-full text-sm font-semibold hover:bg-gray-300"><i class="fas fa-search-plus"></i></button>
-                            <button class="zoom-out-btn bg-gray-200 p-2 rounded-full text-sm font-semibold hover:bg-gray-300"><i class="fas fa-search-minus"></i></button>
-                        </div>
                     </div>
                     
                     <!-- Clock hands -->
@@ -621,16 +605,14 @@
             const feedbackForm = document.getElementById('feedback-form');
             const saveChangesBtn = document.getElementById('saveChangesBtn');
             const resetChangesBtn = document.getElementById('resetChangesBtn');
+            const zoomControls = document.getElementById('zoomControls');
+            const zoomSlider = document.getElementById('zoomSlider');
 
             let images = {};
             let activeImageId = null;
-            let isDragging = false;
-            let startX, startY;
-            let currentX = 0, currentY = 0;
-            let currentScale = 1;
-
+            
             for (let i = 1; i <= 4; i++) {
-                images[i] = { status: 'Upload', transform: { x: 0, y: 0, scale: 1 } };
+                images[i] = { status: 'Upload', xOffset: 0, yOffset: 0, scale: 1.0 };
             }
 
             const updateStatusTable = () => {
@@ -646,37 +628,12 @@
                 }
             };
 
-            const updateImageTransform = (areaElement) => {
-                const img = areaElement.querySelector('img');
+            const updateImageTransform = (imageId) => {
+                const area = document.querySelector(`[data-image-id='${imageId}']`);
+                const img = area.querySelector('img');
                 if (img) {
-                    const id = areaElement.dataset.imageId;
-                    const { x, y, scale } = images[id].transform;
-                    img.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-                }
-            };
-
-            const resetAllTransforms = () => {
-                for (let i = 1; i <= 4; i++) {
-                    images[i].transform = { x: 0, y: 0, scale: 1 };
-                    const area = document.querySelector(`[data-image-id="${i}"]`);
-                    updateImageTransform(area);
-                }
-            };
-
-            const setActiveImage = (areaElement) => {
-                imageAreas.forEach(area => area.classList.remove('active'));
-                const controls = document.querySelectorAll('.manual-controls');
-                controls.forEach(control => control.classList.remove('active'));
-                if (areaElement && areaElement.classList.contains('has-image')) {
-                    areaElement.classList.add('active');
-                    areaElement.querySelector('.manual-controls').classList.add('active');
-                    activeImageId = areaElement.dataset.imageId;
-                    const { x, y, scale } = images[activeImageId].transform;
-                    currentX = x;
-                    currentY = y;
-                    currentScale = scale;
-                } else {
-                    activeImageId = null;
+                    const imgData = images[imageId];
+                    img.style.transform = `translate(${imgData.xOffset}px, ${imgData.yOffset}px) scale(${imgData.scale})`;
                 }
             };
 
@@ -685,10 +642,26 @@
             imageAreas.forEach(area => {
                 const fileInput = area.querySelector('input[type="file"]');
                 const imageId = area.dataset.imageId;
+                let activeImage = null;
+                let initialX = 0;
+                let initialY = 0;
 
+                // Handle file input
                 area.addEventListener('click', (event) => {
-                    // Clicks on the placeholder trigger file selection, clicks on the image activate controls
-                    if (!area.classList.contains('has-image')) {
+                    // Set the active image area and enable controls
+                    imageAreas.forEach(a => a.classList.remove('active'));
+                    area.classList.add('active');
+                    activeImageId = imageId;
+                    
+                    if (area.classList.contains('has-image')) {
+                        zoomControls.classList.remove('hidden');
+                        const currentScale = images[activeImageId].scale;
+                        zoomSlider.value = currentScale;
+                    } else {
+                        zoomControls.classList.add('hidden');
+                    }
+
+                    if (event.target.tagName !== 'IMG') {
                         fileInput.click();
                     }
                 });
@@ -701,13 +674,11 @@
                             const imageUrl = e.target.result;
                             images[imageId].status = 'Uploaded';
                             
-                            // Remove placeholder text if it exists
                             const placeholderText = area.querySelector('.placeholder-text');
                             if (placeholderText) {
                                 placeholderText.remove();
                             }
                             
-                            // Create or update the image element inside the circle
                             let imgElement = area.querySelector('img');
                             if (!imgElement) {
                                 imgElement = document.createElement('img');
@@ -716,74 +687,87 @@
                             imgElement.src = imageUrl;
                             area.classList.add('has-image');
                             
-                            // Set the blurred background for the clock
                             imageBg.style.backgroundImage = `url(${imageUrl})`;
 
                             updateStatusTable();
-                            setActiveImage(area);
+                            updateImageTransform(imageId);
                         };
                         reader.readAsDataURL(file);
                     }
                 });
 
-                // Mouse events for dragging the image
-                area.addEventListener('mousedown', (event) => {
-                    // Only start dragging if the event target is the image itself
-                    if (event.target.tagName.toLowerCase() === 'img') {
-                        setActiveImage(area);
-                        isDragging = true;
-                        startX = event.clientX;
-                        startY = event.clientY;
-                        event.preventDefault();
+                // --- Drag and Drop Logic ---
+                const dragStart = (e) => {
+                    if (!area.classList.contains('has-image')) return;
+
+                    const image = area.querySelector('img');
+                    if (e.target !== image) return;
+                    
+                    activeImage = image;
+                    area.classList.add('is-dragging');
+
+                    const imgData = images[imageId];
+                    
+                    if (e.type === 'touchstart') {
+                        initialX = e.touches[0].clientX - imgData.xOffset;
+                        initialY = e.touches[0].clientY - imgData.yOffset;
+                    } else {
+                        initialX = e.clientX - imgData.xOffset;
+                        initialY = e.clientY - imgData.yOffset;
                     }
-                });
+
+                    document.addEventListener('mousemove', drag);
+                    document.addEventListener('mouseup', dragEnd);
+                    document.addEventListener('touchmove', drag);
+                    document.addEventListener('touchend', dragEnd);
+                };
+
+                const dragEnd = (e) => {
+                    activeImage = null;
+                    area.classList.remove('is-dragging');
+                    document.removeEventListener('mousemove', drag);
+                    document.removeEventListener('mouseup', dragEnd);
+                    document.removeEventListener('touchmove', drag);
+                    document.removeEventListener('touchend', dragEnd);
+                };
+
+                const drag = (e) => {
+                    if (!activeImage) return;
+                    e.preventDefault();
+
+                    let clientX, clientY;
+                    if (e.type === 'touchmove') {
+                        clientX = e.touches[0].clientX;
+                        clientY = e.touches[0].clientY;
+                    } else {
+                        clientX = e.clientX;
+                        clientY = e.clientY;
+                    }
+
+                    const dx = clientX - initialX;
+                    const dy = clientY - initialY;
+                    
+                    const imgData = images[imageId];
+                    imgData.xOffset = dx;
+                    imgData.yOffset = dy;
+                    
+                    updateImageTransform(imageId);
+                };
+
+                area.addEventListener('mousedown', dragStart);
+                area.addEventListener('touchstart', dragStart);
             });
+            // --- End of Drag and Drop Logic ---
 
-            document.addEventListener('mousemove', (event) => {
-                if (isDragging && activeImageId) {
-                    const areaElement = document.querySelector(`[data-image-id="${activeImageId}"]`);
-                    const dx = event.clientX - startX;
-                    const dy = event.clientY - startY;
-
-                    images[activeImageId].transform.x = currentX + dx;
-                    images[activeImageId].transform.y = currentY + dy;
-                    updateImageTransform(areaElement);
+            // --- Zoom Logic ---
+            zoomSlider.addEventListener('input', (event) => {
+                if (activeImageId) {
+                    const newScale = parseFloat(event.target.value);
+                    images[activeImageId].scale = newScale;
+                    updateImageTransform(activeImageId);
                 }
             });
-
-            document.addEventListener('mouseup', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    if (activeImageId) {
-                        currentX = images[activeImageId].transform.x;
-                        currentY = images[activeImageId].transform.y;
-                    }
-                }
-            });
-
-            // Zoom functionality
-            document.querySelectorAll('.zoom-in-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    if (activeImageId) {
-                        currentScale = Math.min(2, currentScale + 0.1);
-                        images[activeImageId].transform.scale = currentScale;
-                        const areaElement = document.querySelector(`[data-image-id="${activeImageId}"]`);
-                        updateImageTransform(areaElement);
-                    }
-                });
-            });
-
-            document.querySelectorAll('.zoom-out-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    if (activeImageId) {
-                        currentScale = Math.max(1, currentScale - 0.1);
-                        images[activeImageId].transform.scale = currentScale;
-                        const areaElement = document.querySelector(`[data-image-id="${activeImageId}"]`);
-                        updateImageTransform(areaElement);
-                    }
-                });
-            });
-
+            // --- End of Zoom Logic ---
 
             // Handle Clock Hands toggle
             showHandsCheckbox.addEventListener('change', (event) => {
@@ -818,33 +802,99 @@
             document.getElementById('submitBtn').addEventListener('click', () => {
                 const uploadedImages = Object.values(images).filter(img => img.status === 'Uploaded');
                 if (uploadedImages.length > 0) {
-                    alert('Images submitted successfully!');
+                    // Use a custom message box instead of alert()
+                    const messageBox = document.createElement('div');
+                    messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">Images submitted successfully!</div>`;
+                    document.body.appendChild(messageBox);
+                    setTimeout(() => messageBox.remove(), 2000);
                     console.log('Submitted images:', uploadedImages);
                 } else {
-                    alert('Please upload at least one image before submitting.');
+                    // Use a custom message box instead of alert()
+                    const messageBox = document.createElement('div');
+                    messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">Please upload at least one image before submitting.</div>`;
+                    document.body.appendChild(messageBox);
+                    setTimeout(() => messageBox.remove(), 2000);
                 }
             });
 
             saveChangesBtn.addEventListener('click', () => {
-                setActiveImage(null);
-                alert('Changes saved!');
+                // Use a custom message box instead of alert()
+                const messageBox = document.createElement('div');
+                messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">Changes saved!</div>`;
+                document.body.appendChild(messageBox);
+                setTimeout(() => messageBox.remove(), 2000);
             });
 
             resetChangesBtn.addEventListener('click', () => {
-                const confirmation = confirm('Are you sure you want to reset all image positions and zoom levels?');
-                if (confirmation) {
-                    resetAllTransforms();
-                    alert('Images have been reset to their default positions.');
-                }
+                // Use custom modal for confirmation
+                const confirmationModal = document.createElement('div');
+                confirmationModal.classList.add('modal');
+                confirmationModal.innerHTML = `
+                    <div class="modal-content">
+                        <h3>Are you sure you want to reset all images?</h3>
+                        <div class="flex justify-center gap-4 mt-4">
+                            <button id="confirmReset" class="bg-red-500 text-white px-4 py-2 rounded">Yes, Reset</button>
+                            <button id="cancelReset" class="bg-gray-400 text-white px-4 py-2 rounded">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(confirmationModal);
+                confirmationModal.style.display = 'flex';
+
+                document.getElementById('confirmReset').addEventListener('click', () => {
+                    images = {};
+                    imageAreas.forEach(area => {
+                        area.classList.remove('has-image', 'active');
+                        const img = area.querySelector('img');
+                        if (img) {
+                           img.style.transform = `translate(0px, 0px)`;
+                           img.remove();
+                        }
+                        const placeholderText = area.querySelector('.placeholder-text');
+                        if (!placeholderText) {
+                            const span = document.createElement('span');
+                            span.className = 'placeholder-text';
+                            span.textContent = `Add Image ${area.dataset.imageId}`;
+                            area.appendChild(span);
+                        }
+                    });
+                    for (let i = 1; i <= 4; i++) {
+                        images[i] = { status: 'Upload', xOffset: 0, yOffset: 0, scale: 1.0 };
+                    }
+                    updateStatusTable();
+                    imageBg.style.backgroundImage = '';
+                    zoomControls.classList.add('hidden');
+                    activeImageId = null;
+                    
+                    // Use a custom message box instead of alert()
+                    const messageBox = document.createElement('div');
+                    messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">Images have been reset.</div>`;
+                    document.body.appendChild(messageBox);
+                    setTimeout(() => messageBox.remove(), 2000);
+                    
+                    confirmationModal.remove();
+                });
+
+                document.getElementById('cancelReset').addEventListener('click', () => {
+                    confirmationModal.remove();
+                });
             });
 
             document.getElementById('generatePdfBtn').addEventListener('click', () => {
-                alert('PDF generation is a feature to be implemented. A server-side process is typically required for this.');
+                // Use a custom message box instead of alert()
+                const messageBox = document.createElement('div');
+                messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">PDF generation is a feature to be implemented. A server-side process is typically required for this.</div>`;
+                document.body.appendChild(messageBox);
+                setTimeout(() => messageBox.remove(), 2000);
             });
 
             // Feedback modal functionality
             thumbsUpBtn.addEventListener('click', () => {
-                alert("Thank you for your positive feedback! We're glad you enjoyed your experience.");
+                // Use a custom message box instead of alert()
+                const messageBox = document.createElement('div');
+                messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">Thank you for your positive feedback! We're glad you enjoyed your experience.</div>`;
+                document.body.appendChild(messageBox);
+                setTimeout(() => messageBox.remove(), 2000);
                 console.log("Thumbs up clicked");
             });
 
@@ -866,7 +916,11 @@
                 event.preventDefault();
                 const feedbackText = document.getElementById('feedback-text').value;
                 if (feedbackText.trim() !== '') {
-                    alert("Thank you for your valuable feedback! We'll use it to improve.");
+                    // Use a custom message box instead of alert()
+                    const messageBox = document.createElement('div');
+                    messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">Thank you for your valuable feedback! We'll use it to improve.</div>`;
+                    document.body.appendChild(messageBox);
+                    setTimeout(() => messageBox.remove(), 2000);
                     console.log("Feedback submitted:", feedbackText);
                     feedbackModal.style.display = 'none';
                     feedbackForm.reset();
