@@ -150,7 +150,7 @@
             justify-content: center;
             align-items: center;
             background-color: var(--bg-light);
-            border: 2px dashed var(--text-light);
+            border: 5px solid rgba(255, 255, 255, 0.5); /* Updated border to transparent white */
             cursor: pointer;
             transition: all 0.3s ease;
             overflow: hidden;
@@ -167,7 +167,7 @@
             cursor: grabbing;
         }
         .image-circle-area.has-image.active {
-            border: 2px dashed var(--secondary-blue);
+            border: 5px solid var(--secondary-blue); /* Updated border width */
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
         }
         .image-circle-area img {
@@ -183,7 +183,7 @@
         .image-circle-area .placeholder-text {
             font-size: 1rem;
             color: var(--text-light);
-            font-weight: 500;
+            font-weight: 700; /* Made the font bold */
             z-index: 20;
             text-align: center;
             line-height: 1.2;
