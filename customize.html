@@ -787,6 +787,7 @@
             document.getElementById('submitBtn').addEventListener('click', () => {
                 const uploadedImages = Object.values(images).filter(img => img.status === 'Uploaded');
                 if (uploadedImages.length > 0) {
+                    localStorage.setItem('showHands', showHandsCheckbox.checked);
                     localStorage.setItem('clockData', JSON.stringify(images));
                     
                     const messageBox = document.createElement('div');

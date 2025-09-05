@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your Order</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        :root {
+            --primary-green: #34D399;
+            --primary-dark-green: #10B981;
+            --secondary-blue: #3B82F6;
+            --text-dark: #2A364F;
+            --text-light: #5C6B80;
+            --bg-light: #F9FAFB;
+            --bg-medium: #F3F4F6;
+            --border-color: #E5E7EB;
+            --white: #FFFFFF;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+        }
+        .container {
+            max-width: 800px;
+        }
+        .download-btn {
+            background-color: var(--secondary-blue);
+            color: var(--white);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .download-btn:hover {
+            background-color: #2563EB;
+        }
+        .confirm-btn {
+            background-color: var(--primary-green);
+            color: var(--text-dark);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .confirm-btn:hover {
+            background-color: var(--primary-dark-green);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="container bg-white p-8 rounded-lg shadow-xl text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Confirm Your Order</h1>
+        <p class="text-lg text-gray-600 mb-8">Please confirm the details of your customized clock and enter the desired quantity.</p>
+
+        <div id="clock-preview" class="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-8">
+            <h3 class="text-xl font-semibold mb-4">Clock Preview:</h3>
+            <img id="preview-image" src="" alt="Custom Clock Preview" class="mx-auto rounded-lg shadow-md max-h-64 mb-4">
+        </div>
+
+        <div class="mb-6 flex flex-col items-center">
+            <label for="quantity" class="text-gray-700 font-medium mb-2">Quantity:</label>
+            <input type="number" id="quantity" name="quantity" min="1" value="1" class="w-24 text-center border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        </div>
+
+        <div class="flex justify-center space-x-4">
+            <button id="download-btn" class="download-btn flex items-center space-x-2">
+                <i class="fas fa-file-pdf"></i>
+                <span>Download PDF</span>
+            </button>
+            <button id="confirm-btn" class="confirm-btn flex items-center space-x-2">
+                <i class="fas fa-check-circle"></i>
+                <span>Confirm Order</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const previewImage = document.getElementById('preview-image');
+            const confirmBtn = document.getElementById('confirm-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const quantityInput = document.getElementById('quantity');
+
+            // Retrieve the image data from sessionStorage
+            const imageData = sessionStorage.getItem('customClockImage');
+            if (imageData) {
+                previewImage.src = imageData;
+            }
+
+            confirmBtn.addEventListener('click', () => {
+                const quantity = quantityInput.value;
+                // Store quantity in sessionStorage to be used on the receipt page
+                sessionStorage.setItem('orderQuantity', quantity);
+                // Redirect to the receipt page
+                window.location.href = 'receipt.html';
+            });
+
+            downloadBtn.addEventListener('click', async () => {
+                const clockPreviewDiv = document.getElementById('clock-preview');
+                const { jsPDF } = window.jspdf;
+                
+                // Use a larger scale for higher resolution
+                html2canvas(clockPreviewDiv, { scale: 2 }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const imgProps= pdf.getImageProperties(imgData);
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save('custom-clock-preview.pdf');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
