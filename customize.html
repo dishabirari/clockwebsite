@@ -459,17 +459,14 @@
     </header>
 
     <main class="main-container">
-        <!-- Left Panel -->
         <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm md:w-1/3 flex-shrink-0">
             <h2 class="text-2xl font-bold mb-6 text-center">Customize Your Clock</h2>
             
-            <!-- Show Clock Hands Checkbox -->
             <div class="mb-6 flex items-center justify-between">
                 <label for="showHands" class="text-lg font-medium">Show Clock Hands</label>
                 <input type="checkbox" id="showHands" checked class="form-checkbox h-5 w-5 text-green-600 rounded">
             </div>
             
-            <!-- Zoom Controls -->
             <div id="zoomControls" class="mb-6 hidden">
                 <h3 class="text-lg font-medium mb-2">Zoom Image</h3>
                 <input type="range" id="zoomSlider" min="1.0" max="3.0" step="0.1" value="1.0" class="w-full">
@@ -479,7 +476,6 @@
                 </div>
             </div>
 
-            <!-- Image Status Table -->
             <div class="mb-8">
                 <h3 class="text-xl font-semibold mb-4">Image Status</h3>
                 <table class="min-w-full bg-gray-50 rounded-lg shadow-inner">
@@ -490,21 +486,19 @@
                         </tr>
                     </thead>
                     <tbody id="status-table-body">
-                        <!-- Rows will be populated by JavaScript -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
 
-            <!-- Action Buttons -->
             <div class="flex flex-col gap-4">
-                <button id="submitBtn" class="bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md">
-                    Submit Images
+                 <button id="resetChangesBtn" class="bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors shadow-md">
+                    Reset
                 </button>
                 <button id="saveChangesBtn" class="bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-md">
                     Save Changes
                 </button>
-                <button id="resetChangesBtn" class="bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors shadow-md">
-                    Reset
+                <button id="submitBtn" class="bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md">
+                    Submit Images
                 </button>
                 <button id="generatePdfBtn" class="bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition-colors shadow-md">
                     Generate PDF
@@ -512,20 +506,16 @@
             </div>
         </div>
 
-        <!-- Right Clock Panel -->
         <div class="flex-grow flex items-center justify-center p-8 relative">
             <div class="clock-container relative">
                 <div class="clock-face">
-                    <!-- This div will hold the blurred background image -->
                     <div id="image-bg" class="image-bg"></div>
 
-                    <!-- Main clock face numbers -->
                     <div id="number-12" class="clock-number">12</div>
                     <div id="number-3" class="clock-number">3</div>
                     <div id="number-6" class="clock-number">6</div>
                     <div id="number-9" class="clock-number">9</div>
 
-                    <!-- Image Areas -->
                     <div class="image-circle-area image-1" data-image-id="1">
                         <span class="placeholder-text">Add Image 1</span>
                         <input type="file" class="hidden" accept="image/*">
@@ -543,19 +533,16 @@
                         <input type="file" class="hidden" accept="image/*">
                     </div>
                     
-                    <!-- Clock hands -->
                     <div class="hand hour-hand"></div>
                     <div class="hand minute-hand"></div>
                     <div class="hand second-hand"></div>
                     
-                    <!-- Clock center -->
                     <div class="clock-center"></div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Footer from homepage -->
     <footer>
         <div class="footer-content">
             <div class="contact-info">
@@ -612,7 +599,7 @@
             let activeImageId = null;
             
             for (let i = 1; i <= 4; i++) {
-                images[i] = { status: 'Upload', xOffset: 0, yOffset: 0, scale: 1.0 };
+                images[i] = { status: 'Upload', xOffset: 0, yOffset: 0, scale: 1.0, src: '' };
             }
 
             const updateStatusTable = () => {
@@ -673,6 +660,7 @@
                         reader.onload = (e) => {
                             const imageUrl = e.target.result;
                             images[imageId].status = 'Uploaded';
+                            images[imageId].src = imageUrl; // Save the image data URL
                             
                             const placeholderText = area.querySelector('.placeholder-text');
                             if (placeholderText) {
@@ -802,18 +790,20 @@
             document.getElementById('submitBtn').addEventListener('click', () => {
                 const uploadedImages = Object.values(images).filter(img => img.status === 'Uploaded');
                 if (uploadedImages.length > 0) {
-                    // Use a custom message box instead of alert()
+                    localStorage.setItem('clockData', JSON.stringify(images));
+                    
                     const messageBox = document.createElement('div');
-                    messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">Images submitted successfully!</div>`;
+                    messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">Thank you, your clock is in the making!</div>`;
                     document.body.appendChild(messageBox);
-                    setTimeout(() => messageBox.remove(), 2000);
-                    console.log('Submitted images:', uploadedImages);
+                    setTimeout(() => {
+                        messageBox.remove();
+                        window.location.href = 'receipt.html';
+                    }, 3000);
                 } else {
-                    // Use a custom message box instead of alert()
                     const messageBox = document.createElement('div');
                     messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">Please upload at least one image before submitting.</div>`;
                     document.body.appendChild(messageBox);
-                    setTimeout(() => messageBox.remove(), 2000);
+                    setTimeout(() => messageBox.remove(), 3000);
                 }
             });
 
@@ -859,7 +849,7 @@
                         }
                     });
                     for (let i = 1; i <= 4; i++) {
-                        images[i] = { status: 'Upload', xOffset: 0, yOffset: 0, scale: 1.0 };
+                        images[i] = { status: 'Upload', xOffset: 0, yOffset: 0, scale: 1.0, src: '' };
                     }
                     updateStatusTable();
                     imageBg.style.backgroundImage = '';

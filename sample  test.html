@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Custom Clock Receipt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --primary-green: #34D399;
+            --primary-dark-green: #10B981;
+            --secondary-blue: #3B82F6;
+            --text-dark: #2A364F;
+            --text-light: #5C6B80;
+            --bg-light: #F9FAFB;
+            --bg-medium: #F3F4F6;
+            --border-color: #E5E7EB;
+            --white: #FFFFFF;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .receipt-card {
+            background-color: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 2.5rem;
+        }
+        .receipt-card h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-green);
+        }
+        .receipt-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+            border-bottom: 2px dashed var(--border-color);
+            padding-bottom: 1.5rem;
+        }
+        .receipt-details div {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 1.5rem;
+        }
+        .receipt-details p {
+            font-size: 1rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+        .receipt-details span {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .pdf-section {
+            text-align: center;
+            margin-top: 2.5rem;
+        }
+        .pdf-button {
+            background-color: var(--secondary-blue);
+            color: var(--white);
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .pdf-button:hover {
+            background-color: #2563EB;
+            transform: translateY(-2px);
+        }
+        .custom-clock-preview {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        .custom-clock-container {
+            width: 300px; /* Smaller size for the preview */
+            height: 300px;
+            position: relative;
+        }
+        .custom-clock-container .clock-face {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-medium);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .custom-clock-container .image-circle-area {
+            position: absolute;
+            width: 25%;
+            height: 25%;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        .custom-clock-container .image-circle-area img {
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            object-fit: cover;
+            object-position: center center;
+            transform: translate(0, 0) scale(1.0);
+        }
+        .custom-clock-container .image-1 { top: 15%; left: 50%; transform: translateX(-50%); }
+        .custom-clock-container .image-2 { top: 50%; right: 15%; transform: translateY(-50%); }
+        .custom-clock-container .image-3 { bottom: 15%; left: 50%; transform: translateX(-50%); }
+        .custom-clock-container .image-4 { top: 50%; left: 15%; transform: translateY(-50%); }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .pdf-container, .pdf-container * {
+                visibility: visible;
+            }
+            .pdf-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container">
+        <div class="header">
+            <h1 class="text-4xl font-bold">Thank you for your order!</h1>
+            <p class="text-lg text-gray-600 mt-2">Your Custom Clock is in the making.</p>
+        </div>
+
+        <div class="receipt-card" id="receiptContent">
+            <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-gray-200 pb-4 mb-4">Order Summary</h2>
+            
+            <div class="receipt-details">
+                <div>
+                    <p>Order Number: <span>#123456789</span></p>
+                    <p>Date: <span>September 5, 2025</span></p>
+                </div>
+                <div>
+                    <p>Subtotal: <span>$29.99</span></p>
+                    <p>Shipping: <span>$5.00</span></p>
+                    <p>Total: <span>$34.99</span></p>
+                </div>
+            </div>
+
+            <div class="pdf-section">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Your Customized Clock Preview</h3>
+                <div class="custom-clock-preview" id="custom-clock-preview">
+                    </div>
+                <button id="downloadPdfBtn" class="pdf-button mt-6">
+                    <i class="fas fa-file-pdf"></i>
+                    Download PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const clockData = JSON.parse(localStorage.getItem('clockData'));
+            const previewContainer = document.getElementById('custom-clock-preview');
+            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+
+            // If no data is found, show a message
+            if (!clockData) {
+                previewContainer.innerHTML = '<p class="text-gray-500">No clock data found. Please go back and customize your clock.</p>';
+                downloadPdfBtn.style.display = 'none';
+                return;
+            }
+
+            // Create the clock structure for the receipt page
+            const clockDiv = document.createElement('div');
+            clockDiv.id = 'clockToPrint';
+            clockDiv.className = 'custom-clock-container';
+            clockDiv.innerHTML = `
+                <div class="clock-face">
+                    <div id="image-bg-receipt" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; filter: blur(10px); transform: scale(1.1); z-index: 0; opacity: 0.1;"></div>
+                    <div class="image-circle-area image-1" data-image-id="1"></div>
+                    <div class="image-circle-area image-2" data-image-id="2"></div>
+                    <div class="image-circle-area image-3" data-image-id="3"></div>
+                    <div class="image-circle-area image-4" data-image-id="4"></div>
+                </div>
+            `;
+            previewContainer.appendChild(clockDiv);
+            const imageBgReceipt = document.getElementById('image-bg-receipt');
+
+            // Populate the clock with saved images and transformations
+            for (const id in clockData) {
+                if (clockData[id].status === 'Uploaded') {
+                    const imgData = clockData[id];
+                    const area = clockDiv.querySelector(`.image-${id}`);
+                    const imgElement = document.createElement('img');
+                    imgElement.src = imgData.src;
+                    imgElement.style.transform = `translate(${imgData.xOffset}px, ${imgData.yOffset}px) scale(${imgData.scale})`;
+                    area.appendChild(imgElement);
+
+                    // Set the blurred background
+                    imageBgReceipt.style.backgroundImage = `url(${imgData.src})`;
+                }
+            }
+
+            // PDF generation logic
+            downloadPdfBtn.addEventListener('click', () => {
+                const elementToPrint = document.getElementById('receiptContent');
+                
+                // Temporarily hide elements not needed for the PDF (e.g., the button itself)
+                downloadPdfBtn.style.display = 'none';
+                
+                html2canvas(elementToPrint, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true
+                }).then(canvas => {
+                    const { jsPDF } = window.jspdf;
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const imgWidth = 210; 
+                    const pageHeight = 295;
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+                    let heightLeft = imgHeight;
+                    let position = 0;
+                    
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+
+                    pdf.save('custom_clock_receipt.pdf');
+                    
+                    // Show the button again
+                    downloadPdfBtn.style.display = 'inline-flex';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
