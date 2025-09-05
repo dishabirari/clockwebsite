@@ -200,7 +200,6 @@
             height: 100%;
             background-size: cover;
             background-position: center;
-            filter: blur(10px);
             transform: scale(1.1);
             z-index: 0;
             opacity: 0.1;
@@ -793,10 +792,12 @@
                     const messageBox = document.createElement('div');
                     messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">Thank you, your clock is in the making!</div>`;
                     document.body.appendChild(messageBox);
+                    
+                    // Redirect almost instantly after showing the popup.
                     setTimeout(() => {
                         messageBox.remove();
                         window.location.href = 'receipt.html';
-                    }, 2000); // Changed from 3000 to 2000
+                    }, 100); 
                 } else {
                     const messageBox = document.createElement('div');
                     messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">Please upload at least one image before submitting.</div>`;
