@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Image Clock</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F0F4F8;
+            color: #2A364F;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 300px;
+            background-color: #FFFFFF;
+            padding: 2rem;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            overflow-y: auto;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .clock-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+        }
+
+        .clock-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #E2E8F0;
+            border-radius: 9999px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .clock-number {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #4B5563;
+            z-index: 20;
+        }
+        
+        .clock-number-12 { top: 7%; left: 50%; }
+        .clock-number-3 { top: 50%; left: 93%; }
+        .clock-number-6 { top: 93%; left: 50%; }
+        .clock-number-9 { top: 50%; left: 7%; }
+
+        .clock-hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom;
+            background-color: #2A364F;
+            border-radius: 9999px;
+            z-index: 50;
+        }
+
+        .hour-hand {
+            width: 10px;
+            height: 120px;
+        }
+
+        .minute-hand {
+            width: 8px;
+            height: 180px;
+        }
+
+        .second-hand {
+            width: 4px;
+            height: 200px;
+            background-color: #EF4444;
+        }
+
+        .clock-center {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background-color: #2A364F;
+            border-radius: 9999px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 60;
+        }
+        
+        .image-circle-area {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background-color: #FFFFFF;
+            border-radius: 9999px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 30;
+            border: 4px solid transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            user-select: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .image-circle-area.selected {
+            border-color: #3B82F6;
+        }
+        
+        .image-circle-area:active {
+            cursor: grabbing;
+        }
+        
+        /* Positions for the four circles */
+        .image-circle-1 { top: 15%; left: 50%; transform: translate(-50%, -50%); }
+        .image-circle-2 { top: 50%; left: 85%; transform: translate(-50%, -50%); }
+        .image-circle-3 { top: 85%; left: 50%; transform: translate(-50%, -50%); }
+        .image-circle-4 { top: 50%; left: 15%; transform: translate(-50%, -50%); }
+        
+        .image-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .upload-placeholder {
+            font-size: 1.25rem;
+            color: #6B7280;
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .controls {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-weight: 600;
+        }
+        
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .zoom-controls button {
+            background-color: #3B82F6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            cursor: pointer;
+        }
+        
+        #rotate-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #E5E7EB;
+            outline: none;
+            border-radius: 9999px;
+        }
+        #rotate-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #10B981;
+            border-radius: 9999px;
+            cursor: pointer;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3B82F6;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex">
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar bg-white p-6 shadow-md rounded-lg m-6">
+            <h1 class="text-2xl font-bold mb-2">Clock Customizer</h1>
+            <p id="user-info" class="text-sm text-gray-500 mb-6"></p>
+
+            <div class="flex flex-col gap-2 mb-4">
+                <button id="reset-btn" class="bg-gray-400 text-white p-2 rounded-md">Reset All</button>
+                <button id="save-btn" class="bg-green-500 text-white p-2 rounded-md">Save Changes</button>
+                <button id="load-btn" class="bg-yellow-500 text-white p-2 rounded-md">Load Saved State</button>
+            </div>
+            
+            <div class="flex items-center space-x-2 mb-4">
+                <input type="checkbox" id="show-hands-checkbox" checked>
+                <label for="show-hands-checkbox">Show Clock Hands</label>
+            </div>
+            
+            <div class="flex items-center space-x-2 mb-4">
+                <input type="checkbox" id="show-numbers-checkbox" checked>
+                <label for="show-numbers-checkbox">Show Clock Numbers</label>
+            </div>
+            
+            <div class="control-group mb-4">
+                <label for="clock-color-picker">Clock Face Color</label>
+                <input type="color" id="clock-color-picker" value="#E2E8F0" class="w-full h-10 cursor-pointer">
+            </div>
+
+            <hr class="my-6">
+            <div class="mt-8">
+                <h2 class="text-lg font-semibold mb-2">Generate AI Images</h2>
+                <p class="text-sm text-gray-500 mb-4">Select a circle on the clock, then enter a prompt to generate an image with AI.</p>
+                <div class="control-group">
+                    <label for="prompt-input">Image Prompt</label>
+                    <input type="text" id="prompt-input" class="w-full p-2 border rounded-md" placeholder="e.g., a futuristic cityscape">
+                </div>
+                <button id="generate-image-btn" class="bg-purple-500 text-white p-2 rounded-md mt-4 w-full disabled:bg-purple-300">Generate Image</button>
+            </div>
+
+            <hr class="my-6">
+            <div class="mt-8">
+                <h2 class="text-lg font-semibold mb-2">Upload Your Own Image</h2>
+                <p class="text-sm text-gray-500 mb-4">Select a circle on the clock, then upload an image to use as a background.</p>
+                <div class="control-group">
+                    <label for="file-input" class="block text-sm font-medium text-gray-700">Select Image File</label>
+                    <input type="file" id="file-input" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept="image/*">
+                </div>
+                <button id="upload-btn" class="bg-blue-500 text-white p-2 rounded-md mt-4 w-full disabled:bg-blue-300">Apply Uploaded Image</button>
+            </div>
+            
+            <button id="generate-pdf-btn" class="bg-blue-500 text-white p-2 rounded-md mt-4 w-full">Generate PDF</button>
+
+            <div id="message-box" class="mt-4 p-3 bg-green-100 text-green-700 rounded-md hidden"></div>
+
+        </aside>
+
+        <!-- Main Clock View -->
+        <main class="main-content">
+            <div class="clock-container relative">
+                <div class="clock-bg"></div>
+                <span class="clock-number clock-number-12" id="num-12">12</span>
+                <span class="clock-number clock-number-3" id="num-3">3</span>
+                <span class="clock-number clock-number-6" id="num-6">6</span>
+                <span class="clock-number clock-number-9" id="num-9">9</span>
+
+                <!-- Image Circles -->
+                <div class="image-circle-area" id="image-circle-1" data-image-id="1">
+                    <img class="image-preview" alt="User Image">
+                    <span class="upload-placeholder">Add Image 1</span>
+                </div>
+                <div class="image-circle-area" id="image-circle-2" data-image-id="2">
+                    <img class="image-preview" alt="User Image">
+                    <span class="upload-placeholder">Add Image 2</span>
+                </div>
+                <div class="image-circle-area" id="image-circle-3" data-image-id="3">
+                    <img class="image-preview" alt="User Image">
+                    <span class="upload-placeholder">Add Image 3</span>
+                </div>
+                <div class="image-circle-area" id="image-circle-4" data-image-id="4">
+                    <img class="image-preview" alt="User Image">
+                    <span class="upload-placeholder">Add Image 4</span>
+                </div>
+
+                <!-- Clock Hands -->
+                <div class="clock-hand hour-hand" id="hour-hand"></div>
+                <div class="clock-hand minute-hand" id="minute-hand"></div>
+                <div class="clock-hand second-hand" id="second-hand"></div>
+                <div class="clock-center"></div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="message-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <p id="modal-message" class="mb-4"></p>
+            <div id="loading-spinner" class="loading-spinner hidden"></div>
+            <button id="close-modal-btn" class="bg-blue-500 text-white p-2 mt-4 rounded-md hidden">Close</button>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables for Firebase and other state management
+        let db, auth, userId, appId;
+        const userInfoEl = document.getElementById('user-info');
+        const messageModal = document.getElementById('message-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const imageCircles = document.querySelectorAll('.image-circle-area');
+        const clockBg = document.querySelector('.clock-bg');
+        const hourHand = document.getElementById('hour-hand');
+        const minuteHand = document.getElementById('minute-hand');
+        const secondHand = document.getElementById('second-hand');
+        const numbers = document.querySelectorAll('.clock-number');
+        const showHandsCheckbox = document.getElementById('show-hands-checkbox');
+        const showNumbersCheckbox = document.getElementById('show-numbers-checkbox');
+        const clockColorPicker = document.getElementById('clock-color-picker');
+
+        const generateImageBtn = document.getElementById('generate-image-btn');
+        const promptInput = document.getElementById('prompt-input');
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('upload-btn');
+
+        const resetBtn = document.getElementById('reset-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const loadBtn = document.getElementById('load-btn');
+        const generatePdfBtn = document.getElementById('generate-pdf-btn');
+
+        let activeImageId = null;
+
+        // Utility function to show modal messages
+        function showMessage(message, isPersistent = false) {
+            modalMessage.textContent = message;
+            messageModal.classList.remove('hidden');
+            if (isPersistent) {
+                loadingSpinner.classList.add('hidden');
+                closeModalBtn.classList.remove('hidden');
+            } else {
+                loadingSpinner.classList.add('hidden');
+                closeModalBtn.classList.remove('hidden');
+            }
+        }
+        
+        function showLoading(message) {
+            modalMessage.textContent = message;
+            loadingSpinner.classList.remove('hidden');
+            closeModalBtn.classList.add('hidden');
+            messageModal.classList.remove('hidden');
+        }
+
+        closeModalBtn.addEventListener('click', () => {
+            messageModal.classList.add('hidden');
+        });
+
+        // Firebase Initialization and Authentication
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        if (Object.keys(firebaseConfig).length > 0) {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            setLogLevel('debug'); // Enable debug logging for Firestore
+
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+            if (initialAuthToken) {
+                signInWithCustomToken(auth, initialAuthToken)
+                    .catch((error) => {
+                        console.error("Custom token sign-in failed:", error);
+                        signInAnonymously(auth);
+                    });
+            } else {
+                signInAnonymously(auth);
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    userId = user.uid;
+                    userInfoEl.textContent = `User ID: ${userId}`;
+                    console.log("Firebase initialized and user signed in:", userId);
+                } else {
+                    console.error("Firebase authentication failed or user signed out.");
+                }
+            });
+        } else {
+            console.error("Firebase config is not available. Firestore features will be disabled.");
+        }
+
+        // Clock functionality
+        function updateTime() {
+            const now = new Date();
+            const seconds = now.getSeconds();
+            const minutes = now.getMinutes();
+            const hours = now.getHours();
+            
+            const secondDegrees = (seconds / 60) * 360 + 90;
+            const minuteDegrees = (minutes / 60) * 360 + (seconds / 60) * 6 + 90;
+            const hourDegrees = (hours / 12) * 360 + (minutes / 60) * 30 + 90;
+
+            secondHand.style.transform = `rotate(${secondDegrees}deg)`;
+            minuteHand.style.transform = `rotate(${minuteDegrees}deg)`;
+            hourHand.style.transform = `rotate(${hourDegrees}deg)`;
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // UI control handlers
+        showHandsCheckbox.addEventListener('change', () => {
+            const isVisible = showHandsCheckbox.checked;
+            hourHand.style.display = isVisible ? '' : 'none';
+            minuteHand.style.display = isVisible ? '' : 'none';
+            secondHand.style.display = isVisible ? '' : 'none';
+        });
+
+        showNumbersCheckbox.addEventListener('change', () => {
+            const isVisible = showNumbersCheckbox.checked;
+            numbers.forEach(num => num.style.display = isVisible ? '' : 'none');
+        });
+
+        clockColorPicker.addEventListener('input', (event) => {
+            clockBg.style.backgroundColor = event.target.value;
+        });
+
+        // Image selection and drag functionality
+        imageCircles.forEach(circle => {
+            circle.addEventListener('click', (e) => {
+                imageCircles.forEach(c => c.classList.remove('selected'));
+                circle.classList.add('selected');
+                activeImageId = circle.dataset.imageId;
+            });
+
+            // Drag functionality for circles
+            let isDragging = false;
+            let startX, startY;
+            let initialLeft, initialTop;
+
+            circle.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = circle.getBoundingClientRect();
+                initialLeft = rect.left + window.scrollX;
+                initialTop = rect.top + window.scrollY;
+                circle.style.cursor = 'grabbing';
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                circle.style.cursor = 'grab';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                const parentRect = circle.parentElement.getBoundingClientRect();
+                const newLeft = initialLeft + deltaX - parentRect.left;
+                const newTop = initialTop + deltaY - parentRect.top;
+                
+                // Keep the circle within the clock face
+                const radius = parentRect.width / 2;
+                const centerX = parentRect.width / 2;
+                const centerY = parentRect.height / 2;
+                const distance = Math.sqrt(Math.pow(newLeft + circle.offsetWidth / 2 - centerX, 2) + Math.pow(newTop + circle.offsetHeight / 2 - centerY, 2));
+
+                if (distance + circle.offsetWidth / 2 <= radius) {
+                    circle.style.left = `${newLeft}px`;
+                    circle.style.top = `${newTop}px`;
+                }
+            });
+        });
+
+        // Gemini API Image Generation (using imagen-3.0-generate-002 model)
+        generateImageBtn.addEventListener('click', async () => {
+            if (!activeImageId) {
+                showMessage("Please select an image circle on the clock first.");
+                return;
+            }
+
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                showMessage("Please enter a prompt for the image.");
+                return;
+            }
+
+            const activeImageCircle = document.getElementById(`image-circle-${activeImageId}`);
+            const imagePreview = activeImageCircle.querySelector('.image-preview');
+            const uploadPlaceholder = activeImageCircle.querySelector('.upload-placeholder');
+
+            showLoading('Generating image, please wait...');
+            generateImageBtn.disabled = true;
+
+            try {
+                const payload = { 
+                    instances: [{ prompt: prompt }], 
+                    parameters: { "sampleCount": 1} 
+                };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+
+                if (base64Data) {
+                    const imageUrl = `data:image/png;base64,${base64Data}`;
+                    imagePreview.src = imageUrl;
+                    imagePreview.style.display = 'block';
+                    uploadPlaceholder.style.display = 'none';
+                    showMessage('Image generated successfully!');
+                } else {
+                    throw new Error("No image data received from the API.");
+                }
+            } catch (error) {
+                console.error("Image generation error:", error);
+                showMessage(`Image generation failed: ${error.message}`);
+            } finally {
+                generateImageBtn.disabled = false;
+            }
+        });
+
+        // User Image Upload
+        uploadBtn.addEventListener('click', () => {
+            if (!activeImageId) {
+                showMessage("Please select an image circle on the clock first.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (!file) {
+                showMessage("Please select a file to upload.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const activeImageCircle = document.getElementById(`image-circle-${activeImageId}`);
+                const imagePreview = activeImageCircle.querySelector('.image-preview');
+                const uploadPlaceholder = activeImageCircle.querySelector('.upload-placeholder');
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                uploadPlaceholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // State Management with Firestore
+        saveBtn.addEventListener('click', async () => {
+            if (!db || !userId) {
+                showMessage("Firebase is not initialized. Cannot save data.");
+                return;
+            }
+            showLoading('Saving changes...');
+
+            const state = {
+                clockColor: clockColorPicker.value,
+                showHands: showHandsCheckbox.checked,
+                showNumbers: showNumbersCheckbox.checked,
+                images: [],
+                positions: []
+            };
+
+            imageCircles.forEach(circle => {
+                const imagePreview = circle.querySelector('.image-preview');
+                const imgData = imagePreview.src;
+                const style = window.getComputedStyle(circle);
+                state.images.push(imgData);
+                state.positions.push({
+                    top: style.top,
+                    left: style.left
+                });
+            });
+
+            try {
+                const docRef = doc(db, `/artifacts/${appId}/users/${userId}/clockState/myClock`);
+                await setDoc(docRef, state);
+                showMessage('Changes saved successfully!');
+            } catch (error) {
+                console.error("Error saving document: ", error);
+                showMessage(`Error saving changes: ${error.message}`);
+            }
+        });
+
+        loadBtn.addEventListener('click', async () => {
+            if (!db || !userId) {
+                showMessage("Firebase is not initialized. Cannot load data.");
+                return;
+            }
+            showLoading('Loading saved state...');
+
+            try {
+                const docRef = doc(db, `/artifacts/${appId}/users/${userId}/clockState/myClock`);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const state = docSnap.data();
+                    clockColorPicker.value = state.clockColor;
+                    clockBg.style.backgroundColor = state.clockColor;
+                    showHandsCheckbox.checked = state.showHands;
+                    showHandsCheckbox.dispatchEvent(new Event('change'));
+                    showNumbersCheckbox.checked = state.showNumbers;
+                    showNumbersCheckbox.dispatchEvent(new Event('change'));
+
+                    imageCircles.forEach((circle, index) => {
+                        const imagePreview = circle.querySelector('.image-preview');
+                        const uploadPlaceholder = circle.querySelector('.upload-placeholder');
+                        imagePreview.src = state.images[index];
+                        if (state.images[index]) {
+                            imagePreview.style.display = 'block';
+                            uploadPlaceholder.style.display = 'none';
+                        } else {
+                            imagePreview.style.display = 'none';
+                            uploadPlaceholder.style.display = 'block';
+                        }
+                        circle.style.top = state.positions[index].top;
+                        circle.style.left = state.positions[index].left;
+                    });
+                    showMessage('Saved state loaded successfully!');
+                } else {
+                    showMessage("No saved state found.");
+                }
+            } catch (error) {
+                console.error("Error loading document: ", error);
+                showMessage(`Error loading state: ${error.message}`);
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            clockBg.style.backgroundColor = '#E2E8F0';
+            clockColorPicker.value = '#E2E8F0';
+            showHandsCheckbox.checked = true;
+            showHandsCheckbox.dispatchEvent(new Event('change'));
+            showNumbersCheckbox.checked = true;
+            showNumbersCheckbox.dispatchEvent(new Event('change'));
+            
+            imageCircles.forEach((circle, index) => {
+                const imagePreview = circle.querySelector('.image-preview');
+                const uploadPlaceholder = circle.querySelector('.upload-placeholder');
+                imagePreview.src = '';
+                imagePreview.style.display = 'none';
+                uploadPlaceholder.style.display = 'block';
+                // Reset positions
+                if (index === 0) { circle.style.top = '15%'; circle.style.left = '50%'; }
+                if (index === 1) { circle.style.top = '50%'; circle.style.left = '85%'; }
+                if (index === 2) { circle.style.top = '85%'; circle.style.left = '50%'; }
+                if (index === 3) { circle.style.top = '50%'; circle.style.left = '15%'; }
+            });
+
+            showMessage('Clock has been reset to default.');
+        });
+
+        // PDF Generation
+        generatePdfBtn.addEventListener('click', () => {
+            showMessage('Generating PDF...');
+            const clock = document.querySelector('.clock-container');
+            html2canvas(clock, {
+                scale: 2,
+                useCORS: true
+            }).then(canvas => {
+                const { jsPDF } = window.jspdf;
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'px',
+                    format: [canvas.width, canvas.height]
+                });
+                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                pdf.save('interactive-clock.pdf');
+                showMessage('PDF generated successfully!');
+            });
+        });
+
+    </script>
+</body>
+</html>
