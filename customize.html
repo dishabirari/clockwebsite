@@ -672,8 +672,6 @@
                             imgElement.src = imageUrl;
                             area.classList.add('has-image');
                             
-                            imageBg.style.backgroundImage = `url(${imageUrl})`;
-
                             updateStatusTable();
                             updateImageTransform(imageId);
                         };
@@ -787,7 +785,6 @@
             document.getElementById('submitBtn').addEventListener('click', () => {
                 const uploadedImages = Object.values(images).filter(img => img.status === 'Uploaded');
                 if (uploadedImages.length > 0) {
-                    localStorage.setItem('showHands', showHandsCheckbox.checked);
                     localStorage.setItem('clockData', JSON.stringify(images));
                     
                     const messageBox = document.createElement('div');
