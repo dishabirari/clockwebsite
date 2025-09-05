@@ -500,8 +500,8 @@
                 <button id="submitBtn" class="bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md">
                     Submit Images
                 </button>
-                <button id="generatePdfBtn" class="bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition-colors shadow-md">
-                    Generate PDF
+                <button id="goToReceiptBtn" class="bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors shadow-md">
+                    Go to Receipt Page
                 </button>
             </div>
         </div>
@@ -594,6 +594,7 @@
             const resetChangesBtn = document.getElementById('resetChangesBtn');
             const zoomControls = document.getElementById('zoomControls');
             const zoomSlider = document.getElementById('zoomSlider');
+            const goToReceiptBtn = document.getElementById('goToReceiptBtn');
 
             let images = {};
             let activeImageId = null;
@@ -805,6 +806,10 @@
                     document.body.appendChild(messageBox);
                     setTimeout(() => messageBox.remove(), 3000);
                 }
+            });
+            
+            goToReceiptBtn.addEventListener('click', () => {
+                window.location.href = 'receipt.html';
             });
 
             saveChangesBtn.addEventListener('click', () => {
