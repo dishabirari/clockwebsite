@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirm Your Custom Clock Order</title>
+    <title>Your Custom Clock Receipt</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -194,7 +194,7 @@
             height: 25%;
             border-radius: 50%;
             overflow: hidden;
-            background-size: cover;
+            background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             display: flex;
@@ -358,25 +358,6 @@
             background-color: var(--primary-dark-green);
             transform: translateY(-2px);
         }
-        .input-group {
-            margin-top: 1.5rem;
-            margin-bottom: 2rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1rem;
-        }
-        .input-group label {
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-        .input-group input {
-            padding: 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            width: 80px;
-            text-align: center;
-        }
 
         /* Responsive design from homepage */
         @media (max-width: 768px) {
@@ -464,51 +445,35 @@
     </header>
 
     <main class="main-container">
-        <div class="container text-center" id="order-page">
-            <h1 class="text-4xl font-bold">Your Custom Clock</h1>
-            <p class="text-lg text-gray-600 mt-2">Ready to place your order? Confirm your customization and quantity below.</p>
-            <div class="input-group">
-                <label for="quantity">Quantity:</label>
-                <input type="number" id="quantity" name="quantity" min="1" value="1">
+        <div class="container">
+            <div class="header">
+                <h1 class="text-4xl font-bold">Thank you for your order!</h1>
+                <p class="text-lg text-gray-600 mt-2">Your Custom Clock is in the making.</p>
             </div>
-            <button id="confirmOrderBtn" class="pdf-button mt-4">
-                <i class="fas fa-check-circle"></i>
-                Confirm Order
-            </button>
-        </div>
-        
-        <div id="receipt-container" style="display: none;">
-            <div class="container">
-                <div class="header">
-                    <h1 class="text-4xl font-bold">Thank you for your order!</h1>
-                    <p class="text-lg text-gray-600 mt-2">Your Custom Clock is in the making.</p>
+    
+            <div class="receipt-card" id="receiptContent">
+                <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-gray-200 pb-4 mb-4">Order Summary</h2>
+                
+                <div class="receipt-details">
+                    <div>
+                        <p>Order Number: <span>#123456789</span></p>
+                        <p>Date: <span>September 5, 2025</span></p>
+                    </div>
+                    <div>
+                        <p>Subtotal: <span>$29.99</span></p>
+                        <p>Shipping: <span>$5.00</span></p>
+                        <p>Total: <span>$34.99</span></p>
+                    </div>
                 </div>
-        
-                <div class="receipt-card" id="receiptContent">
-                    <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-gray-200 pb-4 mb-4">Order Summary</h2>
-                    
-                    <div class="receipt-details">
-                        <div>
-                            <p>Order Number: <span>#123456789</span></p>
-                            <p>Date: <span>September 5, 2025</span></p>
-                            <p>Quantity: <span id="receipt-quantity">1</span></p>
+    
+                <div class="pdf-section">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Your Customized Clock Preview</h3>
+                    <div class="custom-clock-preview" id="custom-clock-preview">
                         </div>
-                        <div>
-                            <p>Subtotal: <span id="receipt-subtotal">$29.99</span></p>
-                            <p>Shipping: <span>$5.00</span></p>
-                            <p>Total: <span id="receipt-total">$34.99</span></p>
-                        </div>
-                    </div>
-        
-                    <div class="pdf-section">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Your Customized Clock Preview</h3>
-                        <div class="custom-clock-preview" id="custom-clock-preview">
-                        </div>
-                        <button id="downloadPdfBtn" class="pdf-button mt-6">
-                            <i class="fas fa-file-pdf"></i>
-                            Download PDF
-                        </button>
-                    </div>
+                    <button id="downloadPdfBtn" class="pdf-button mt-6">
+                        <i class="fas fa-file-pdf"></i>
+                        Download PDF
+                    </button>
                 </div>
             </div>
         </div>
@@ -552,27 +517,114 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const confirmOrderBtn = document.getElementById('confirmOrderBtn');
-            const orderPage = document.getElementById('order-page');
-            const receiptContainer = document.getElementById('receipt-container');
+            const clockData = JSON.parse(localStorage.getItem('clockData'));
             const previewContainer = document.getElementById('custom-clock-preview');
             const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+
+            // If no data is found, show a message
+            if (!clockData) {
+                previewContainer.innerHTML = '<p class="text-gray-500">No clock data found. Please go back and customize your clock.</p>';
+                downloadPdfBtn.style.display = 'none';
+                return;
+            }
+
+            // Create the clock structure for the receipt page
+            const clockDiv = document.createElement('div');
+            clockDiv.id = 'clockToPrint';
+            clockDiv.className = 'custom-clock-container';
+            clockDiv.innerHTML = `
+                <div class="clock-face">
+                    <div id="number-12" style="position: absolute; font-size: 1.5rem; font-weight: 600; color: #2A364F; top: 3%; left: 50%; transform: translateX(-50%);">12</div>
+                    <div id="number-3" style="position: absolute; font-size: 1.5rem; font-weight: 600; color: #2A364F; top: 50%; right: 3%; transform: translateY(-50%);">3</div>
+                    <div id="number-6" style="position: absolute; font-size: 1.5rem; font-weight: 600; color: #2A364F; bottom: 3%; left: 50%; transform: translateX(-50%);">6</div>
+                    <div id="number-9" style="position: absolute; font-size: 1.5rem; font-weight: 600; color: #2A364F; top: 50%; left: 3%; transform: translateY(-50%);">9</div>
+                    <div class="image-circle-area image-1" data-image-id="1"></div>
+                    <div class="image-circle-area image-2" data-image-id="2"></div>
+                    <div class="image-circle-area image-3" data-image-id="3"></div>
+                    <div class="image-circle-area image-4" data-image-id="4"></div>
+                    <div class="hand hour-hand" style="width: 8px; height: 35%; top: 15%; left: calc(50% - 4px); background-color: #2A364F; border-radius: 5px; position: absolute; transform-origin: bottom center; z-index: 90;"></div>
+                    <div class="hand minute-hand" style="width: 6px; height: 40%; top: 10%; left: calc(50% - 3px); background-color: #2A364F; border-radius: 5px; position: absolute; transform-origin: bottom center; z-index: 90;"></div>
+                    <div class="hand second-hand" style="width: 3px; height: 45%; top: 5%; left: calc(50% - 1.5px); background-color: #34D399; border-radius: 5px; position: absolute; transform-origin: bottom center; z-index: 90;"></div>
+                    <div class="clock-center" style="position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; background-color: #2A364F; border-radius: 50%; transform: translate(-50%, -50%); z-index: 100;"></div>
+                </div>
+            `;
+            previewContainer.appendChild(clockDiv);
+
+            // Populate the clock with saved images
+            for (const id in clockData) {
+                if (clockData[id].status === 'Uploaded') {
+                    const imgData = clockData[id];
+                    const area = clockDiv.querySelector(`.image-${id}`);
+                    area.style.backgroundImage = `url(${imgData.src})`;
+                }
+            }
             
-            const quantityInput = document.getElementById('quantity');
-            const receiptQuantitySpan = document.getElementById('receipt-quantity');
-            const receiptSubtotalSpan = document.getElementById('receipt-subtotal');
-            const receiptTotalSpan = document.getElementById('receipt-total');
+            // Function to set time for the preview clock
+            const setPreviewTime = () => {
+                const date = new Date();
+                const seconds = date.getSeconds();
+                const minutes = date.getMinutes();
+                const hours = date.getHours();
+                const secondsDegrees = ((seconds / 60) * 360);
+                const minutesDegrees = ((minutes / 60) * 360) + ((seconds/60)*6);
+                const hoursDegrees = ((hours / 12) * 360) + ((minutes/60)*30);
+                
+                const secondHand = clockDiv.querySelector('.second-hand');
+                const minuteHand = clockDiv.querySelector('.minute-hand');
+                const hourHand = clockDiv.querySelector('.hour-hand');
+                
+                if (secondHand) secondHand.style.transform = `rotate(${secondsDegrees}deg)`;
+                if (minuteHand) minuteHand.style.transform = `rotate(${minutesDegrees}deg)`;
+                if (hourHand) hourHand.style.transform = `rotate(${hoursDegrees}deg)`;
+            };
+            setPreviewTime();
+            setInterval(setPreviewTime, 1000);
 
-            const CLOCK_PRICE = 29.99;
-            const SHIPPING_COST = 5.00;
 
+            // PDF generation logic
+            downloadPdfBtn.addEventListener('click', () => {
+                const elementToPrint = document.getElementById('receiptContent');
+                
+                // Temporarily hide elements not needed for the PDF (e.g., the button itself)
+                downloadPdfBtn.style.display = 'none';
+                
+                html2canvas(elementToPrint, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true
+                }).then(canvas => {
+                    const { jsPDF } = window.jspdf;
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const imgWidth = 210; 
+                    const pageHeight = 295;
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+                    let heightLeft = imgHeight;
+                    let position = 0;
+                    
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+
+                    pdf.save('custom_clock_receipt.pdf');
+                    
+                    // Show the button again
+                    downloadPdfBtn.style.display = 'inline-flex';
+                });
+            });
             // Feedback modal functionality
             const thumbsUpBtn = document.getElementById('thumbsUp');
             const thumbsDownBtn = document.getElementById('thumbsDown');
             const feedbackModal = document.getElementById('feedback-modal');
             const closeBtn = document.querySelector('.close-btn');
             const feedbackForm = document.getElementById('feedback-form');
-
+            
             thumbsUpBtn.addEventListener('click', () => {
                 const messageBox = document.createElement('div');
                 messageBox.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; text-align: center;">Thank you for your positive feedback! We're glad you enjoyed your experience.</div>`;
@@ -606,139 +658,6 @@
                     feedbackForm.reset();
                 }
             });
-
-            confirmOrderBtn.addEventListener('click', async () => {
-                // Simulate receiving the clock data from the customize.html page
-                const clockData = {
-                    "1": { "status": "Uploaded", "src": "image_12b4c7.png" },
-                    "2": { "status": "Uploaded", "src": "https://via.placeholder.com/150" },
-                    "3": { "status": "Uploaded", "src": "https://via.placeholder.com/150" },
-                    "4": { "status": "Uploaded", "src": "https://via.placeholder.com/150" }
-                };
-                
-                // Store this data in local storage for use by the receipt page
-                localStorage.setItem('clockData', JSON.stringify(clockData));
-
-                // Get the selected quantity
-                const quantity = parseInt(quantityInput.value, 10);
-                if (isNaN(quantity) || quantity < 1) {
-                    alert('Please enter a valid quantity of 1 or more.');
-                    return;
-                }
-
-                // Calculate costs
-                const subtotal = quantity * CLOCK_PRICE;
-                const total = subtotal + SHIPPING_COST;
-                
-                // Update the receipt with the calculated values
-                receiptQuantitySpan.textContent = quantity;
-                receiptSubtotalSpan.textContent = `$${subtotal.toFixed(2)}`;
-                receiptTotalSpan.textContent = `$${total.toFixed(2)}`;
-
-                // Hide the order page and show the receipt page
-                orderPage.style.display = 'none';
-                receiptContainer.style.display = 'block';
-                
-                // Now, generate the receipt content
-                generateReceipt();
-            });
-
-            const generateReceipt = () => {
-                const clockData = JSON.parse(localStorage.getItem('clockData'));
-                
-                if (!clockData) {
-                    previewContainer.innerHTML = '<p class="text-gray-500">No clock data found. Please go back and customize your clock.</p>';
-                    downloadPdfBtn.style.display = 'none';
-                    return;
-                }
-
-                const clockDiv = document.createElement('div');
-                clockDiv.id = 'clockToPrint';
-                clockDiv.className = 'custom-clock-container';
-                clockDiv.innerHTML = `
-                    <div class="clock-face">
-                        <div id="number-12" style="position: absolute; font-size: 1.5rem; font-weight: 600; color: #2A364F; top: 3%; left: 50%; transform: translateX(-50%);">12</div>
-                        <div id="number-3" style="position: absolute; font-size: 1.5rem; font-weight: 600; color: #2A364F; top: 50%; right: 3%; transform: translateY(-50%);">3</div>
-                        <div id="number-6" style="position: absolute; font-size: 1.5rem; font-weight: 600; color: #2A364F; bottom: 3%; left: 50%; transform: translateX(-50%);">6</div>
-                        <div id="number-9" style="position: absolute; font-size: 1.5rem; font-weight: 600; color: #2A364F; top: 50%; left: 3%; transform: translateY(-50%);">9</div>
-                        <div class="image-circle-area image-1" data-image-id="1"></div>
-                        <div class="image-circle-area image-2" data-image-id="2"></div>
-                        <div class="image-circle-area image-3" data-image-id="3"></div>
-                        <div class="image-circle-area image-4" data-image-id="4"></div>
-                        <div class="hand hour-hand" style="width: 8px; height: 35%; top: 15%; left: calc(50% - 4px); background-color: #2A364F; border-radius: 5px; position: absolute; transform-origin: bottom center; z-index: 90;"></div>
-                        <div class="hand minute-hand" style="width: 6px; height: 40%; top: 10%; left: calc(50% - 3px); background-color: #2A364F; border-radius: 5px; position: absolute; transform-origin: bottom center; z-index: 90;"></div>
-                        <div class="hand second-hand" style="width: 3px; height: 45%; top: 5%; left: calc(50% - 1.5px); background-color: #34D399; border-radius: 5px; position: absolute; transform-origin: bottom center; z-index: 90;"></div>
-                        <div class="clock-center" style="position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; background-color: #2A364F; border-radius: 50%; transform: translate(-50%, -50%); z-index: 100;"></div>
-                    </div>
-                `;
-                previewContainer.appendChild(clockDiv);
-                
-                // Dynamically load images from the local storage data
-                for (const id in clockData) {
-                    if (clockData[id].status === 'Uploaded') {
-                        const imgData = clockData[id];
-                        const area = clockDiv.querySelector(`.image-${id}`);
-                        if (area) {
-                            area.style.backgroundImage = `url(${imgData.src})`;
-                        }
-                    }
-                }
-                
-                const setPreviewTime = () => {
-                    const date = new Date();
-                    const seconds = date.getSeconds();
-                    const minutes = date.getMinutes();
-                    const hours = date.getHours();
-                    const secondsDegrees = ((seconds / 60) * 360);
-                    const minutesDegrees = ((minutes / 60) * 360) + ((seconds/60)*6);
-                    const hoursDegrees = ((hours / 12) * 360) + ((minutes/60)*30);
-                    
-                    const secondHand = clockDiv.querySelector('.second-hand');
-                    const minuteHand = clockDiv.querySelector('.minute-hand');
-                    const hourHand = clockDiv.querySelector('.hour-hand');
-                    
-                    if (secondHand) secondHand.style.transform = `rotate(${secondsDegrees}deg)`;
-                    if (minuteHand) minuteHand.style.transform = `rotate(${minutesDegrees}deg)`;
-                    if (hourHand) hourHand.style.transform = `rotate(${hoursDegrees}deg)`;
-                };
-                setPreviewTime();
-                setInterval(setPreviewTime, 1000);
-
-                downloadPdfBtn.addEventListener('click', () => {
-                    const elementToPrint = document.getElementById('receiptContent');
-                    
-                    downloadPdfBtn.style.display = 'none';
-                    
-                    html2canvas(elementToPrint, {
-                        scale: 2,
-                        useCORS: true,
-                        allowTaint: true
-                    }).then(canvas => {
-                        const { jsPDF } = window.jspdf;
-                        const imgData = canvas.toDataURL('image/png');
-                        const pdf = new jsPDF('p', 'mm', 'a4');
-                        const imgWidth = 210; 
-                        const pageHeight = 295;
-                        const imgHeight = canvas.height * imgWidth / canvas.width;
-                        let heightLeft = imgHeight;
-                        let position = 0;
-                        
-                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= pageHeight;
-                        
-                        while (heightLeft >= 0) {
-                            position = heightLeft - imgHeight;
-                            pdf.addPage();
-                            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                            heightLeft -= pageHeight;
-                        }
-
-                        pdf.save('custom_clock_receipt.pdf');
-                        
-                        downloadPdfBtn.style.display = 'inline-flex';
-                    });
-                });
-            };
         });
     </script>
 </body>
